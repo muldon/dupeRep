@@ -1,0 +1,1195 @@
+
+Reuniaão 25/08 
+- wordtovec
+
+Questoes para observar nos testes
+- 24685161 
+- 12521602 
+- 13611388
+- 24506081
+- 12101308
+- 12521602
+- 24506081 - caracteres no título 
+- 2697024 - ponto de interrogacao junto com palavra ( Ruby? )
+- 12521602
+- rubygems e gems ( questao 6147343 com dupe 2085050 ). Sem tratamento de sinonimos, BM25 trouxe com peso 1 = 15480, sumcosines = 11723. 
+
+TODO list
+
+- Testar tag python - verificar como ficou questão sem simbolos 23687504, secao 7.2 do paper. 
+- Testar outro classificador
+- desenhar algoritmo
+- testar busca retirando codigo da busca
+- testar remover espacos desnecessários
+- considerar outros fatores: 
+1- score
+2- accepted answer e score da answer
+
+
+
+--Como treinamento é ordenado em ordem decrescente de sum of cosines, armazenar resultados do teste de cada questão para entao definir upperbound a cada teste subsequente.. isso iria agilizar testes em massa.
+--montrar grafico com hits e posições
+--definir estratégia de upperbound baseado em testes
+
+
+**ajustar as 1750 questoes para 1680.. nao repetidas
+
+Lotes:
+
+17- ok - base 2014- Testando k e b, max 5000 percent 100, parametros variando 0,00 ate 0.10 cada, de 0.01 em 0.01. 
+Faltando pouco pra terminar
+
+
+18- base 2014- testando k e b, max 5000 percent 100, variando 0.1 cada. 
+
+    - 181- PL2 - base 2014 - max 5000, pesos 1
+    - 181- PL2 - base 2014 - max 5000, pesos 1 - retirando simbolos especiais tambem ao indexar
+    - 182- PL2 - base 2014 - max 10000
+    - 183- BM25 - base 2014 - max 10000 - com simbolos
+    - 184- BM25 - base 2014 - max 10000 - sem simbolos
+
+
+19- base 2017- testando pesos aleatï¿½rios - base 2017 sem pontos nos cï¿½digos, k e b valores 1 e 1
+
+20- base 2014-  max 10000-  testando pesos aleatï¿½rios - sem pontos nos cï¿½digos, k e b valores melhroes em lote 18
+  
+21- base 2014- google
+
+200- em execucao - Pesos aleatórios - BM25 e PL2 ( k e b = 1.40 e 1.00 ) max 10000
+    201- em execucao - identica
+
+
+
+
+Results for Google: 1747 of  1680
+Hits 50:  1107 - Recall rate 50:  63.36
+Hits 20:  1107 - Recall rate 20:  63.36
+Hits 10  1032 - Recall rate 10:  59.07
+Hits 5:  922 - Recall rate 5:  52.77
+Hits 1:  572 - Recall rate 1:  32.74
+
+
+
+DONE list
+
+Estratégia:
+
+- Para code, testar deixando apenas palavras sem caracteres especiais ou números, focando em mensagens de erro - feature a mais
+  Em pre-process: 
+- Parsear o conteúdo. Token a token separar o que é somente palavra e jogar em wordsOnly e o que não é somente palavra em notWordsOnly; 
+- Usar tokenizeStopStem para parsear e stemizar wordsOnly. 
+- Salvar wordsOnly, notWordsOnly, code e tags separadamente
+
+
+-Reunião com Maia 25/07
+1- Calcular somente cosines em todos as questões
+
+3- Tester Duplicated - Duplicated 
+4- Investigar os 30% do bm25 restantes
+5- Melhorar stemming e stop words, contemplando lista de stop words ampliada.
+
+ 
+- corrigir traducao de simbolos especiais que ocorrem aparentemente so no body, ex & se torna &amp; . Transformar &amp; para & antes de processamento...
+- alteracao de classificador para soma dos cosines nao fez muita diferenca do que enviar um a um
+- havera 2 analyzers: english e whitespace. Ao indexar e ao buscar, separar código e tags do restante do conteudo. O restante usar english para gerar o conteudo. Somar codigo e tags. No resultado, parsear com o whitespace.
+- testar WhitespaceAnalyzer
+- testar não fazer stemmming e stop words dos codigos
+- Tags nao devem entrar no stemming e stopwords. Testar indexar com e sem escape.
+- ** usando tokenizeStopStem para detectar stop words e fazer stemming. Pelo english analyser da diversos problemas. Basicamente pela questão das tags separadas. 
+- testar escape nas tags ao indexar - linha 137 LuceneSearcher ** escape nao faz diferenca para as tags
+- Substituir calculo do cosine por outro mais rápido - retirar calculo do stanford para nerpos 
+pois é lento e nao sera usado. 
+- Retirar term overlap: paper pag 9
+- fazer cache das questoes indexadas para busca por id nao precisar ir no bd na classificacao
+- calcular recall-rate somente para o bm25 em paralelo
+- na busca do lucene, concatenar conteudo em um doc só, somente um field
+calculateSimilarityTitleBodyBodyTitleTitleTag: false
+- profiling na classificacao
+- lucene com parametros no bm25
+- Desacoplar mecanismo de indexacao e busca da classificacao
+-duplicated nos titles das duplicadas
+-retirar questoes sem resposta (masters)
+-steming e stopwords:
+Método tokenizeStopStem realiza steming e retira stop words. Feito em tempo de classificao para não ter perda na extração do código fonte. Se feito em fase anterior, prejudica código.
+- testar classificador com cosine 0 ao inves de null para CC para nao duplicadas
+
+
+
+
+
+Runs
+
+Analisar somente pelas tabelas....
+
+
+analisando run com k e b fixos, teste
+
+Results for BM25: 1680 of  1680
+Hits max (5000):  1343 - Recall rate max:  79.94
+Hits 10000:  1343 - Recall rate 10000:  79.94
+Hits 1000:  1107 - Recall rate 1000:  65.89
+Hits 100:  734 - Recall rate 100:  43.69
+Hits 50:  633 - Recall rate 50:  37.67
+Hits 20:  505 - Recall rate 20:  30.05
+Hits 10  413 - Recall rate 10:  24.58
+Hits 5:  337 - Recall rate 5:  20.05
+Hits 1  198 - Recall rate 1:  11.78
+
+
+Results for Sum of Cosines: 1680 of  1680
+Hits max (5000):  1343 - Recall rate max:  79.94
+Hits 10000:  1343 - Recall rate 10000:  79.94
+Hits 1000:  1141 - Recall rate 1000:  67.91
+Hits 100:  759 - Recall rate 100:  45.17
+Hits 50:  660 - Recall rate 50:  39.28
+Hits 20:  528 - Recall rate 20:  31.42
+Hits 10  436 - Recall rate 10:  25.95
+Hits 5:  359 - Recall rate 5:  21.36
+Hits 1  195 - Recall rate 1:  11.6
+
+
+
+lote 4---------------------------------------------- mesmo teste, porem com 10% das questoes em teste
+
+Results for BM25: 173 of  174
+Hits max (50000):  150 - Recall rate max:  86.7
+Hits 10000:  123 - Recall rate 10000:  71.09
+Hits 1000:  78 - Recall rate 1000:  45.08
+Hits 100:  47 - Recall rate 100:  27.16
+Hits 50:  42 - Recall rate 50:  24.27
+Hits 20:  26 - Recall rate 20:  15.02
+Hits 10  21 - Recall rate 10:  12.13
+Hits 5:  19 - Recall rate 5:  10.98
+Hits 1  15 - Recall rate 1:  8.67
+
+
+Results for Sum of Cosines: 173 of  174
+Hits max (50000):  150 - Recall rate max:  86.7
+Hits 10000:  144 - Recall rate 10000:  83.23
+Hits 1000:  116 - Recall rate 1000:  67.05
+Hits 100:  76 - Recall rate 100:  43.93
+Hits 50:  65 - Recall rate 50:  37.57
+Hits 20:  56 - Recall rate 20:  32.36
+Hits 10  45 - Recall rate 10:  26.01
+Hits 5:  38 - Recall rate 5:  21.96
+Hits 1  20 - Recall rate 1:  11.56
+
+
+lote 3---------------------------------------------- peso 1.0 para tudo - mais questões, feito certo agora... 
+
+Results for BM25: 344 of  344
+Hits max (50000):  307 - Recall rate max:  89.24
+Hits 10000:  255 - Recall rate 10000:  74.12
+Hits 1000:  159 - Recall rate 1000:  46.22
+Hits 100:  101 - Recall rate 100:  29.36
+Hits 50:  87 - Recall rate 50:  25.29
+Hits 20:  62 - Recall rate 20:  18.02
+Hits 10  51 - Recall rate 10:  14.82
+Hits 5:  41 - Recall rate 5:  11.91
+Hits 1  30 - Recall rate 1:  8.72
+
+
+Results for Sum of Cosines: 344 of  344
+Hits max (50000):  307 - Recall rate max:  89.24
+Hits 10000:  294 - Recall rate 10000:  85.46
+Hits 1000:  239 - Recall rate 1000:  69.47
+Hits 100:  165 - Recall rate 100:  47.96
+Hits 50:  137 - Recall rate 50:  39.82
+Hits 20:  111 - Recall rate 20:  32.26
+Hits 10  84 - Recall rate 10:  24.41
+Hits 5:  75 - Recall rate 5:  21.8
+Hits 1  44 - Recall rate 1:  12.79
+
+lote 2---------------------------------------------- peso 1.0 para tudo
+
+
+Results for BM25: 228 of  228
+Hits max (50000):  220 - Recall rate max:  96.49
+Hits 10000:  179 - Recall rate 10000:  78.5
+Hits 1000:  121 - Recall rate 1000:  53.07
+Hits 100:  64 - Recall rate 100:  28.07
+Hits 50:  52 - Recall rate 50:  22.8
+Hits 20:  39 - Recall rate 20:  17.1
+Hits 10  34 - Recall rate 10:  14.91
+Hits 5:  25 - Recall rate 5:  10.96
+Hits 1  14 - Recall rate 1:  6.14
+
+
+Results for Sum of Cosines: 228 of  228
+Hits max (50000):  220 - Recall rate max:  96.49
+Hits 10000:  212 - Recall rate 10000:  92.98
+Hits 1000:  167 - Recall rate 1000:  73.24
+Hits 100:  114 - Recall rate 100:  50
+Hits 50:  105 - Recall rate 50:  46.05
+Hits 20:  83 - Recall rate 20:  36.4
+Hits 10  71 - Recall rate 10:  31.14
+Hits 5:  57 - Recall rate 5:  25
+Hits 1  27 - Recall rate 1:  11.84
+
+
+lote 1---------------------------------------------- repetindo teste com peso 1.8 para titles para comparacao com resultado anterior
+Results for BM25: 225 of  225
+Hits max (50000):  216 - Recall rate max:  96
+Hits 10000:  165 - Recall rate 10000:  73.33
+Hits 1000:  102 - Recall rate 1000:  45.33
+Hits 100:  64 - Recall rate 100:  28.44
+Hits 50:  52 - Recall rate 50:  23.11
+Hits 20:  39 - Recall rate 20:  17.33
+Hits 10  29 - Recall rate 10:  12.88
+Hits 5:  20 - Recall rate 5:  8.88
+Hits 1  10 - Recall rate 1:  4.44
+
+
+Results for Sum of Cosines: 225 of  225
+Hits max (50000):  216 - Recall rate max:  96
+Hits 10000:  207 - Recall rate 10000:  92
+Hits 1000:  157 - Recall rate 1000:  69.77
+Hits 100:  106 - Recall rate 100:  47.11
+Hits 50:  101 - Recall rate 50:  44.88
+Hits 20:  82 - Recall rate 20:  36.44
+Hits 10  70 - Recall rate 10:  31.11
+Hits 5:  54 - Recall rate 5:  24
+Hits 1  33 - Recall rate 1:  14.66
+
+
+---------------------------------------------- testando retirada de palavras do codigo e juntando no body, features peso 1.
+Results for BM25: 225 of  225
+Hits max (50000):  215 - Recall rate max:  95.55
+Hits 10000:  165 - Recall rate 10000:  73.33
+Hits 1000:  105 - Recall rate 1000:  46.66
+Hits 100:  63 - Recall rate 100:  28
+Hits 50:  51 - Recall rate 50:  22.66
+Hits 20:  37 - Recall rate 20:  16.44
+Hits 10  29 - Recall rate 10:  12.88
+Hits 5:  20 - Recall rate 5:  8.88
+Hits 1  10 - Recall rate 1:  4.44
+
+
+Results for Sum of Cosines: 225 of  225
+Hits max (50000):  215 - Recall rate max:  95.55
+Hits 10000:  206 - Recall rate 10000:  91.55
+Hits 1000:  159 - Recall rate 1000:  70.66
+Hits 100:  115 - Recall rate 100:  51.11
+Hits 50:  99 - Recall rate 50:  44
+Hits 20:  84 - Recall rate 20:  37.33
+Hits 10  67 - Recall rate 10:  29.77
+Hits 5:  59 - Recall rate 5:  26.22
+Hits 1  31 - Recall rate 1:  13.77
+
+
+---------------------------------------------- peso apenas para bb, resto 0.0 
+Results for Classifier: 227 of  229
+Hits Max (50000):  220 - Recall rate max:  96.92
+Hits 10000:  179 - Recall rate 10000:  78.85
+Hits 1000:  108 - Recall rate 1000:  47.58
+Hits 100:  42 - Recall rate 100:  18.5
+Hits 50:  27 - Recall rate 50:  11.89
+Hits 20:  12 - Recall rate 20:  5.29
+Hits 10  9 - Recall rate 10:  3.96
+Hits 5:  6 - Recall rate 5:  2.64
+Hits 1:  1 - Recall rate 1:  0.44
+
+
+Results for BM25: 227 of  229
+Hits max (50000):  220 - Recall rate max:  96.92
+Hits 10000:  179 - Recall rate 10000:  78.85
+Hits 1000:  118 - Recall rate 1000:  51.98
+Hits 100:  62 - Recall rate 100:  27.31
+Hits 50:  52 - Recall rate 50:  22.91
+Hits 20:  39 - Recall rate 20:  17.18
+Hits 10  34 - Recall rate 10:  14.98
+Hits 5:  25 - Recall rate 5:  11.01
+Hits 1  14 - Recall rate 1:  6.17
+
+
+Results for Sum of Cosines: 227 of  229
+Hits max (50000):  220 - Recall rate max:  96.92
+Hits 10000:  177 - Recall rate 10000:  77.97
+Hits 1000:  117 - Recall rate 1000:  51.54
+Hits 100:  63 - Recall rate 100:  27.75
+Hits 50:  56 - Recall rate 50:  24.67
+Hits 20:  45 - Recall rate 20:  19.82
+Hits 10  36 - Recall rate 10:  15.86
+Hits 5:  33 - Recall rate 5:  14.54
+Hits 1  14 - Recall rate 1:  6.17
+
+
+
+--resultados não muito distantes do paper.. 
+---------------------------------------------- testando experimento em massa - peso apenas para tt, resto 0.0 para avaliar sum of cosines apenas para tt
+Results for BM25: 229 of  229
+Hits max (50000):  222 - Recall rate max:  96.94
+Hits 10000:  181 - Recall rate 10000:  79.04
+Hits 1000:  120 - Recall rate 1000:  52.4
+Hits 100:  63 - Recall rate 100:  27.51
+Hits 50:  52 - Recall rate 50:  22.71
+Hits 20:  39 - Recall rate 20:  17.03
+Hits 10  34 - Recall rate 10:  14.85
+Hits 5:  25 - Recall rate 5:  10.92
+Hits 1  14 - Recall rate 1:  6.11
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max (50000):  222 - Recall rate max:  96.94
+Hits 10000:  196 - Recall rate 10000:  85.59
+Hits 1000:  134 - Recall rate 1000:  58.52
+Hits 100:  90 - Recall rate 100:  39.3
+Hits 50:  81 - Recall rate 50:  35.37
+Hits 20:  62 - Recall rate 20:  27.07
+Hits 10  51 - Recall rate 10:  22.27
+Hits 5:  39 - Recall rate 5:  17.03
+Hits 1  21 - Recall rate 1:  9.17
+
+
+---------------------------------------------- retirando pontos dos codes tb para os codes do classificador, limite 50000 e pesos 1.8 para TT e 1 para o resto
+
+Results for Classifier: 229 of  229
+Hits Max (50000):  222 - Recall rate max:  0.97
+Hits 10000:  190 - Recall rate 10000:  0.83
+Hits 1000:  126 - Recall rate 1000:  0.55
+Hits 100:  68 - Recall rate 100:  0.3
+Hits 50:  54 - Recall rate 50:  0.24
+Hits 20:  35 - Recall rate 20:  0.15
+Hits 10  24 - Recall rate 10:  0.1
+Hits 5:  16 - Recall rate 5:  0.07
+
+
+Results for BM25: 229 of  229
+Hits max (50000):  222 - Recall rate max:  0.97
+Hits 10000:  182 - Recall rate 10000:  0.79
+Hits 1000:  123 - Recall rate 1000:  0.54
+Hits 100:  66 - Recall rate 100:  0.29
+Hits 50:  54 - Recall rate 50:  0.24
+Hits 20:  40 - Recall rate 20:  0.17
+Hits 10  35 - Recall rate 10:  0.15
+Hits 5:  25 - Recall rate 5:  0.11
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max (50000):  222 - Recall rate max:  0.97
+Hits 10000:  214 - Recall rate 10000:  0.93
+Hits 1000:  169 - Recall rate 1000:  0.74
+Hits 100:  115 - Recall rate 100:  0.5
+Hits 50:  106 - Recall rate 50:  0.46
+Hits 20:  85 - Recall rate 20:  0.37
+Hits 10  72 - Recall rate 10:  0.31
+Hits 5:  58 - Recall rate 5:  0.25
+
+
+
+--pequena reducao no sum of cosines, pequeno aumento nos outros
+---------------------------------------------- retirando pontos dos codes para o body ----teste com limite 60000
+
+Results for Classifier: 229 of  229
+Hits Max (60000):  222 - Recall rate max:  0.97
+Hits 10000:  190 - Recall rate 10000:  0.83
+Hits 1000:  122 - Recall rate 1000:  0.53
+Hits 100:  76 - Recall rate 100:  0.33
+Hits 50:  61 - Recall rate 50:  0.27
+Hits 20:  36 - Recall rate 20:  0.16
+Hits 10  23 - Recall rate 10:  0.1
+Hits 5:  15 - Recall rate 5:  0.07
+
+
+Results for BM25: 229 of  229
+Hits max (60000):  222 - Recall rate max:  0.97
+Hits 10000:  185 - Recall rate 10000:  0.81
+Hits 1000:  129 - Recall rate 1000:  0.56
+Hits 100:  77 - Recall rate 100:  0.34
+Hits 50:  72 - Recall rate 50:  0.31
+Hits 20:  49 - Recall rate 20:  0.21
+Hits 10  41 - Recall rate 10:  0.18
+Hits 5:  35 - Recall rate 5:  0.15
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max (60000):  222 - Recall rate max:  0.97
+Hits 10000:  212 - Recall rate 10000:  0.93
+Hits 1000:  175 - Recall rate 1000:  0.76
+Hits 100:  121 - Recall rate 100:  0.53
+Hits 50:  104 - Recall rate 50:  0.45
+Hits 20:  87 - Recall rate 20:  0.38
+Hits 10  72 - Recall rate 10:  0.31
+Hits 5:  60 - Recall rate 5:  0.26
+
+
+---------------------------------------------- melhor resultado não artificial até agora --teste com limite 70000, com peso de 2 para TT e 1.2 para BB e retirando / de title e body sem codigo
+
+Results for Classifier: 229 of  229
+Hits Max (70000):  225 - Recall rate max:  0.98
+Hits 10000:  193 - Recall rate 10000:  0.84
+Hits 1000:  116 - Recall rate 1000:  0.51
+Hits 100:  61 - Recall rate 100:  0.27
+Hits 50:  51 - Recall rate 50:  0.22
+Hits 20:  37 - Recall rate 20:  0.16
+Hits 10  26 - Recall rate 10:  0.11
+Hits 5:  13 - Recall rate 5:  0.06
+
+
+Results for BM25: 229 of  229
+Hits max (70000):  225 - Recall rate max:  0.98
+Hits 10000:  186 - Recall rate 10000:  0.81
+Hits 1000:  117 - Recall rate 1000:  0.51
+Hits 100:  71 - Recall rate 100:  0.31
+Hits 50:  62 - Recall rate 50:  0.27
+Hits 20:  48 - Recall rate 20:  0.21
+Hits 10  42 - Recall rate 10:  0.18
+Hits 5:  34 - Recall rate 5:  0.15
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max (70000):  225 - Recall rate max:  0.98
+Hits 10000:  211 - Recall rate 10000:  0.92
+Hits 1000:  167 - Recall rate 1000:  0.73
+Hits 100:  113 - Recall rate 100:  0.49
+Hits 50:  102 - Recall rate 50:  0.45
+Hits 20:  85 - Recall rate 20:  0.37
+Hits 10  75 - Recall rate 10:  0.33
+Hits 5:  63 - Recall rate 5:  0.28
+
+
+-------------------------------------------------teste com limite 70000, tratando diferente titles de bodys (retirando barras dos titles), com peso de 1.5 para TT, sem [Duplicated] no titulo das masters e com lista de stop words aumentada
+
+Hits Max (70000):  220 - Recall rate max:  0.96
+Hits 10000:  185 - Recall rate 10000:  0.81
+Hits 1000:  107 - Recall rate 1000:  0.47
+Hits 100:  56 - Recall rate 100:  0.24
+Hits 50:  46 - Recall rate 50:  0.2
+Hits 20:  25 - Recall rate 20:  0.11
+Hits 10  17 - Recall rate 10:  0.07
+Hits 5:  7 - Recall rate 5:  0.03
+
+
+Results for BM25: 229 of  229
+Hits max (70000):  220 - Recall rate max:  0.96
+Hits 10000:  187 - Recall rate 10000:  0.82
+Hits 1000:  120 - Recall rate 1000:  0.52
+Hits 100:  71 - Recall rate 100:  0.31
+Hits 50:  57 - Recall rate 50:  0.25
+Hits 20:  43 - Recall rate 20:  0.19
+Hits 10  37 - Recall rate 10:  0.16
+Hits 5:  30 - Recall rate 5:  0.13
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max (70000):  220 - Recall rate max:  0.96
+Hits 10000:  205 - Recall rate 10000:  0.9
+Hits 1000:  160 - Recall rate 1000:  0.7
+Hits 100:  120 - Recall rate 100:  0.52
+Hits 50:  108 - Recall rate 50:  0.47
+Hits 20:  86 - Recall rate 20:  0.38
+Hits 10  66 - Recall rate 10:  0.29
+Hits 5:  57 - Recall rate 5:  0.25
+
+
+
+-------------------------------------------------teste sem limitacao de tamanho, sem [Duplicated] no titulo das masters e com lista de stop words aumentada
+Results for Classifier: 229 of  229
+Hits Max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  191 - Recall rate 10000:  0.83
+Hits 1000:  109 - Recall rate 1000:  0.48
+Hits 100:  53 - Recall rate 100:  0.23
+Hits 50:  44 - Recall rate 50:  0.19
+Hits 20:  27 - Recall rate 20:  0.12
+Hits 10  21 - Recall rate 10:  0.09
+Hits 5:  15 - Recall rate 5:  0.07
+
+
+Results for BM25: 229 of  229
+Hits max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  193 - Recall rate 10000:  0.84
+Hits 1000:  119 - Recall rate 1000:  0.52
+Hits 100:  70 - Recall rate 100:  0.31
+Hits 50:  55 - Recall rate 50:  0.24
+Hits 20:  40 - Recall rate 20:  0.17
+Hits 10  33 - Recall rate 10:  0.14
+Hits 5:  30 - Recall rate 5:  0.13
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  208 - Recall rate 10000:  0.91
+Hits 1000:  168 - Recall rate 1000:  0.73
+Hits 100:  121 - Recall rate 100:  0.53
+Hits 50:  100 - Recall rate 50:  0.44
+Hits 20:  84 - Recall rate 20:  0.37
+Hits 10  71 - Recall rate 10:  0.31
+Hits 5:  56 - Recall rate 5:  0.24
+
+-------------------------------------------------teste sem limitacao de tamanho, com [Duplicated] no titulo das masters e com lista de stop words aumentada
+
+Results for Classifier: 229 of  229
+Hits Max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  194 - Recall rate 10000:  0.85
+Hits 1000:  128 - Recall rate 1000:  0.56
+Hits 100:  82 - Recall rate 100:  0.36
+Hits 50:  58 - Recall rate 50:  0.25
+Hits 20:  35 - Recall rate 20:  0.15
+Hits 10  24 - Recall rate 10:  0.1
+Hits 5:  21 - Recall rate 5:  0.09
+
+
+Results for BM25: 229 of  229
+Hits max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  187 - Recall rate 10000:  0.82
+Hits 1000:  117 - Recall rate 1000:  0.51
+Hits 100:  71 - Recall rate 100:  0.31
+Hits 50:  58 - Recall rate 50:  0.25
+Hits 20:  45 - Recall rate 20:  0.2
+Hits 10  36 - Recall rate 10:  0.16
+Hits 5:  29 - Recall rate 5:  0.13
+
+
+Results for Sum of Cosines: 229 of  229
+Hits max:  229 - Recall rate max:  1
+Hits 50000:  229 - Recall rate 10000:  1
+Hits 10000:  223 - Recall rate 10000:  0.97
+Hits 1000:  186 - Recall rate 1000:  0.81
+Hits 100:  131 - Recall rate 100:  0.57
+Hits 50:  121 - Recall rate 50:  0.53
+Hits 20:  105 - Recall rate 20:  0.46
+Hits 10  89 - Recall rate 10:  0.39
+Hits 5:  69 - Recall rate 5:  0.3
+
+
+-------------------------------------------------teste sem limitacao de tamanho 
+Results for Classifier: 256 of  256
+Hits Max:  255 - Recall rate max:  1
+Hits 50000:  250 - Recall rate 10000:  0.98
+Hits 10000:  192 - Recall rate 10000:  0.75
+Hits 1000:  119 - Recall rate 1000:  0.46
+Hits 100:  68 - Recall rate 100:  0.27
+Hits 50:  48 - Recall rate 50:  0.19
+Hits 20:  28 - Recall rate 20:  0.11
+Hits 10  20 - Recall rate 10:  0.08
+Hits 5:  17 - Recall rate 5:  0.07
+
+
+Results for BM25: 256 of  256
+Hits max:  255 - Recall rate max:  1
+Hits 50000:  240 - Recall rate 10000:  0.94
+Hits 10000:  184 - Recall rate 10000:  0.72
+Hits 1000:  112 - Recall rate 1000:  0.44
+Hits 100:  69 - Recall rate 100:  0.27
+Hits 50:  59 - Recall rate 50:  0.23
+Hits 20:  45 - Recall rate 20:  0.18
+Hits 10  35 - Recall rate 10:  0.14
+Hits 5:  26 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 256 of  256
+Hits max:  255 - Recall rate max:  1
+Hits 50000:  253 - Recall rate 10000:  0.99
+Hits 10000:  225 - Recall rate 10000:  0.88
+Hits 1000:  171 - Recall rate 1000:  0.67
+Hits 100:  123 - Recall rate 100:  0.48
+Hits 50:  106 - Recall rate 50:  0.41
+Hits 20:  86 - Recall rate 20:  0.34
+Hits 10  71 - Recall rate 10:  0.28
+Hits 5:  60 - Recall rate 5:  0.23
+
+-------------------------------------------------repetindo teste com verificacao melhor de cobertura de tag
+Results for Classifier: 256 of  256
+Hits 10000:  204 - Recall rate 10000:  0.8
+Hits 1000:  126 - Recall rate 1000:  0.49
+Hits 500:  107 - Recall rate 500:  0.42
+Hits 100:  75 - Recall rate 100:  0.29
+Hits 50:  58 - Recall rate 50:  0.23
+Hits 20:  37 - Recall rate 20:  0.14
+Hits 10  29 - Recall rate 10:  0.11
+Hits 5:  20 - Recall rate 5:  0.08
+
+
+Results for BM25: 256 of  256
+Hits 10000:  184 - Recall rate 10000:  0.72
+Hits 1000:  112 - Recall rate 1000:  0.44
+Hits 500:  101 - Recall rate 500:  0.39
+Hits 100:  69 - Recall rate 100:  0.27
+Hits 50:  59 - Recall rate 50:  0.23
+Hits 20:  45 - Recall rate 20:  0.18
+Hits 10  35 - Recall rate 10:  0.14
+Hits 5:  26 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 256 of  256
+Hits 10000:  206 - Recall rate 10000:  0.8
+Hits 1000:  172 - Recall rate 1000:  0.67
+Hits 500:  156 - Recall rate 500:  0.61
+Hits 100:  120 - Recall rate 100:  0.47
+Hits 50:  108 - Recall rate 50:  0.42
+Hits 20:  84 - Recall rate 20:  0.33
+Hits 10  69 - Recall rate 10:  0.27
+Hits 5:  58 - Recall rate 5:  0.23
+
+-------------------------------------------------retirando tagtag das features
+
+Results for Classifier: 351 of  351
+Hits 10000:  289 - Recall rate 10000:  0.82
+Hits 1000:  188 - Recall rate 1000:  0.54
+Hits 500:  158 - Recall rate 500:  0.45
+Hits 100:  100 - Recall rate 100:  0.28
+Hits 50:  84 - Recall rate 50:  0.24
+Hits 20:  58 - Recall rate 20:  0.17
+Hits 10  40 - Recall rate 10:  0.11
+Hits 5:  23 - Recall rate 5:  0.07
+
+
+Results for BM25: 351 of  351
+Hits 10000:  273 - Recall rate 10000:  0.78
+Hits 1000:  183 - Recall rate 1000:  0.52
+Hits 500:  154 - Recall rate 500:  0.44
+Hits 100:  106 - Recall rate 100:  0.3
+Hits 50:  85 - Recall rate 50:  0.24
+Hits 20:  64 - Recall rate 20:  0.18
+Hits 10  50 - Recall rate 10:  0.14
+Hits 5:  38 - Recall rate 5:  0.11
+
+
+Results for Sum of Cosines: 351 of  351
+Hits 10000:  295 - Recall rate 10000:  0.84
+Hits 1000:  243 - Recall rate 1000:  0.69
+Hits 500:  227 - Recall rate 500:  0.65
+Hits 100:  169 - Recall rate 100:  0.48
+Hits 50:  147 - Recall rate 50:  0.42
+Hits 20:  111 - Recall rate 20:  0.32
+Hits 10  88 - Recall rate 10:  0.25
+Hits 5:  71 - Recall rate 5:  0.2
+
+
+-------------------------------------------------aumentando nro de questoes comparadas para 20000
+Results for Classifier: 351 of  351
+Hits 10000:  289 - Recall rate 10000:  0.82
+Hits 1000:  156 - Recall rate 1000:  0.44
+Hits 500:  132 - Recall rate 500:  0.38
+Hits 100:  90 - Recall rate 100:  0.26
+Hits 50:  69 - Recall rate 50:  0.2
+Hits 20:  52 - Recall rate 20:  0.15
+Hits 10  34 - Recall rate 10:  0.1
+Hits 5:  22 - Recall rate 5:  0.06
+
+
+Results for BM25: 351 of  351
+Hits 10000:  271 - Recall rate 10000:  0.77
+Hits 1000:  179 - Recall rate 1000:  0.51
+Hits 500:  150 - Recall rate 500:  0.43
+Hits 100:  103 - Recall rate 100:  0.29
+Hits 50:  83 - Recall rate 50:  0.24
+Hits 20:  63 - Recall rate 20:  0.18
+Hits 10  48 - Recall rate 10:  0.14
+Hits 5:  36 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 351 of  351
+Hits 10000:  291 - Recall rate 10000:  0.83
+Hits 1000:  240 - Recall rate 1000:  0.68
+Hits 500:  211 - Recall rate 500:  0.6
+Hits 100:  163 - Recall rate 100:  0.46
+Hits 50:  140 - Recall rate 50:  0.4
+Hits 20:  113 - Recall rate 20:  0.32
+Hits 10  88 - Recall rate 10:  0.25
+Hits 5:  70 - Recall rate 5:  0.2
+
+-------------------------------------------------retirando comparacao de tags
+Results for Classifier: 351 of  351
+Hits 10000:  275 - Recall rate 10000:  0.78
+Hits 1000:  173 - Recall rate 1000:  0.49
+Hits 500:  143 - Recall rate 500:  0.41
+Hits 100:  95 - Recall rate 100:  0.27
+Hits 50:  74 - Recall rate 50:  0.21
+Hits 20:  57 - Recall rate 20:  0.16
+Hits 10  39 - Recall rate 10:  0.11
+Hits 5:  27 - Recall rate 5:  0.08
+
+
+Results for BM25: 351 of  351
+Hits 10000:  275 - Recall rate 10000:  0.78
+Hits 1000:  181 - Recall rate 1000:  0.52
+Hits 500:  153 - Recall rate 500:  0.44
+Hits 100:  107 - Recall rate 100:  0.3
+Hits 50:  86 - Recall rate 50:  0.25
+Hits 20:  64 - Recall rate 20:  0.18
+Hits 10  51 - Recall rate 10:  0.15
+Hits 5:  39 - Recall rate 5:  0.11
+
+
+Results for Sum of Cosines: 351 of  351
+Hits 10000:  275 - Recall rate 10000:  0.78
+Hits 1000:  245 - Recall rate 1000:  0.7
+Hits 500:  218 - Recall rate 500:  0.62
+Hits 100:  167 - Recall rate 100:  0.48
+Hits 50:  143 - Recall rate 50:  0.41
+Hits 20:  116 - Recall rate 20:  0.33
+Hits 10  89 - Recall rate 10:  0.25
+Hits 5:  74 - Recall rate 5:  0.21
+
+-------------------------------------------------lista de simbolos importantes modificada - 
+
+Hits 10000:  186 - Recall rate 10000:  0.7
+Hits 1000:  135 - Recall rate 1000:  0.51
+Hits 500:  103 - Recall rate 500:  0.39
+Hits 100:  55 - Recall rate 100:  0.21
+Hits 50:  42 - Recall rate 50:  0.16
+Hits 20:  31 - Recall rate 20:  0.12
+Hits 10  18 - Recall rate 10:  0.07
+Hits 5:  13 - Recall rate 5:  0.05
+
+
+Results for BM25: 267 of  267
+Hits 10000:  186 - Recall rate 10000:  0.7
+Hits 1000:  114 - Recall rate 1000:  0.43
+Hits 500:  94 - Recall rate 500:  0.35
+Hits 100:  62 - Recall rate 100:  0.23
+Hits 50:  51 - Recall rate 50:  0.19
+Hits 20:  40 - Recall rate 20:  0.15
+Hits 10  32 - Recall rate 10:  0.12
+Hits 5:  27 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 267 of  267
+Hits 10000:  186 - Recall rate 10000:  0.7
+Hits 1000:  172 - Recall rate 1000:  0.64
+Hits 500:  161 - Recall rate 500:  0.6
+Hits 100:  130 - Recall rate 100:  0.49
+Hits 50:  111 - Recall rate 50:  0.42
+Hits 20:  87 - Recall rate 20:  0.33
+Hits 10  70 - Recall rate 10:  0.26
+Hits 5:  56 - Recall rate 5:  0.21
+
+-------------------------------------------------lista de simbolos importantes aumentada - BM25 10000
+Hits 10000:  185 - Recall rate 10000:  0.69
+Hits 1000:  128 - Recall rate 1000:  0.48
+Hits 500:  108 - Recall rate 500:  0.4
+Hits 100:  65 - Recall rate 100:  0.24
+Hits 50:  49 - Recall rate 50:  0.18
+Hits 20:  32 - Recall rate 20:  0.12
+Hits 10  19 - Recall rate 10:  0.07
+Hits 5:  14 - Recall rate 5:  0.05
+
+
+Results for BM25: 267 of  267
+Hits 10000:  185 - Recall rate 10000:  0.69
+Hits 1000:  107 - Recall rate 1000:  0.4
+Hits 500:  90 - Recall rate 500:  0.34
+Hits 100:  62 - Recall rate 100:  0.23
+Hits 50:  54 - Recall rate 50:  0.2
+Hits 20:  45 - Recall rate 20:  0.17
+Hits 10  34 - Recall rate 10:  0.13
+Hits 5:  31 - Recall rate 5:  0.12
+
+
+Results for Sum of Cosines: 267 of  267
+Hits 10000:  185 - Recall rate 10000:  0.69
+Hits 1000:  174 - Recall rate 1000:  0.65
+Hits 500:  161 - Recall rate 500:  0.6
+Hits 100:  118 - Recall rate 100:  0.44
+Hits 50:  98 - Recall rate 50:  0.37
+Hits 20:  77 - Recall rate 20:  0.29
+Hits 10  66 - Recall rate 10:  0.25
+Hits 5:  53 - Recall rate 5:  0.2
+
+
+-------------------------------------------------retirando simbolos importantes: .,() e testando com 15000 no BM25
+Hits 10000:  201 - Recall rate 10000:  0.75
+Hits 1000:  119 - Recall rate 1000:  0.45
+Hits 500:  91 - Recall rate 500:  0.34
+Hits 100:  49 - Recall rate 100:  0.18
+Hits 50:  44 - Recall rate 50:  0.16
+Hits 20:  28 - Recall rate 20:  0.1
+Hits 10  23 - Recall rate 10:  0.09
+Hits 5:  17 - Recall rate 5:  0.06
+
+
+Results for BM25: 267 of  267
+Hits 10000:  188 - Recall rate 10000:  0.7
+Hits 1000:  125 - Recall rate 1000:  0.47
+Hits 500:  113 - Recall rate 500:  0.42
+Hits 100:  80 - Recall rate 100:  0.3
+Hits 50:  67 - Recall rate 50:  0.25
+Hits 20:  47 - Recall rate 20:  0.18
+Hits 10  38 - Recall rate 10:  0.14
+Hits 5:  26 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 267 of  267
+Hits 10000:  203 - Recall rate 10000:  0.76
+Hits 1000:  179 - Recall rate 1000:  0.67
+Hits 500:  165 - Recall rate 500:  0.62
+Hits 100:  126 - Recall rate 100:  0.47
+Hits 50:  106 - Recall rate 50:  0.4
+Hits 20:  82 - Recall rate 20:  0.31
+Hits 10  64 - Recall rate 10:  0.24
+Hits 5:  57 - Recall rate 5:  0.21
+
+
+-------------------------------------------------retirando simbolos importantes: .,()
+
+Hits 10000:  188 - Recall rate 10000:  0.7
+Hits 1000:  126 - Recall rate 1000:  0.47
+Hits 500:  100 - Recall rate 500:  0.37
+Hits 100:  51 - Recall rate 100:  0.19
+Hits 50:  44 - Recall rate 50:  0.16
+Hits 20:  29 - Recall rate 20:  0.11
+Hits 10  24 - Recall rate 10:  0.09
+Hits 5:  17 - Recall rate 5:  0.06
+
+
+Results for BM25: 267 of  267
+Hits 10000:  188 - Recall rate 10000:  0.7
+Hits 1000:  125 - Recall rate 1000:  0.47
+Hits 500:  113 - Recall rate 500:  0.42
+Hits 100:  80 - Recall rate 100:  0.3
+Hits 50:  67 - Recall rate 50:  0.25
+Hits 20:  47 - Recall rate 20:  0.18
+Hits 10  38 - Recall rate 10:  0.14
+Hits 5:  26 - Recall rate 5:  0.1
+
+
+Results for Sum of Cosines: 267 of  267
+Hits 10000:  188 - Recall rate 10000:  0.7
+Hits 1000:  173 - Recall rate 1000:  0.65
+Hits 500:  162 - Recall rate 500:  0.61
+Hits 100:  129 - Recall rate 100:  0.48
+Hits 50:  110 - Recall rate 50:  0.41
+Hits 20:  84 - Recall rate 20:  0.31
+Hits 10  65 - Recall rate 10:  0.24
+Hits 5:  58 - Recall rate 5:  0.22
+
+
+-------------------------------------------------corrigindo calculo do BM25
+
+Results for Classifier: 352 of  352
+Hits 10000:  180 - Recall rate 10000:  0.51
+Hits 1000:  180 - Recall rate 1000:  0.51
+Hits 500:  147 - Recall rate 500:  0.42
+Hits 100:  88 - Recall rate 100:  0.25
+Hits 50:  71 - Recall rate 50:  0.2
+Hits 20:  53 - Recall rate 20:  0.15
+Hits 10  37 - Recall rate 10:  0.11
+Hits 5:  29 - Recall rate 5:  0.08
+
+
+Results for BM25: 352 of  352
+Hits 10000:  183 - Recall rate 10000:  0.52
+Hits 1000:  183 - Recall rate 1000:  0.52
+Hits 500:  159 - Recall rate 500:  0.45
+Hits 100:  118 - Recall rate 100:  0.34
+Hits 50:  101 - Recall rate 50:  0.29
+Hits 20:  76 - Recall rate 20:  0.22
+Hits 10  65 - Recall rate 10:  0.18
+Hits 5:  49 - Recall rate 5:  0.14
+
+
+Results for Sum of Cosines: 352 of  352
+Hits 10000:  236 - Recall rate 10000:  0.67
+Hits 1000:  236 - Recall rate 1000:  0.67
+Hits 500:  219 - Recall rate 500:  0.62
+Hits 100:  174 - Recall rate 100:  0.49
+Hits 50:  145 - Recall rate 50:  0.41
+Hits 20:  112 - Recall rate 20:  0.32
+Hits 10  91 - Recall rate 10:  0.26
+Hits 5:  73 - Recall rate 5:  0.21
+
+
+
+
+-------------------------------------------------somando os cosines no classificador
+
+
+Results for Classifier: 352 of  352
+Hits 10000:  183 - Recall rate 10000:  0.52
+Hits 1000:  183 - Recall rate 1000:  0.52
+Hits 500:  159 - Recall rate 500:  0.45
+Hits 100:  118 - Recall rate 100:  0.34
+Hits 50:  101 - Recall rate 50:  0.29
+Hits 20:  76 - Recall rate 20:  0.22
+Hits 10  65 - Recall rate 10:  0.18
+Hits 5:  49 - Recall rate 5:  0.14
+
+
+Results for BM25: 352 of  352
+Hits 10000:  352 - Recall rate 10000:  1
+Hits 1000:  224 - Recall rate 1000:  0.64
+Hits 500:  196 - Recall rate 500:  0.56
+Hits 100:  138 - Recall rate 100:  0.39
+Hits 50:  118 - Recall rate 50:  0.34
+Hits 20:  86 - Recall rate 20:  0.24
+Hits 10  73 - Recall rate 10:  0.21
+Hits 5:  55 - Recall rate 5:  0.16
+
+
+Results for Sum of Cosines: 352 of  352
+Hits 10000:  236 - Recall rate 10000:  0.67
+Hits 1000:  236 - Recall rate 1000:  0.67
+Hits 500:  219 - Recall rate 500:  0.62
+Hits 100:  174 - Recall rate 100:  0.49
+Hits 50:  145 - Recall rate 50:  0.41
+Hits 20:  112 - Recall rate 20:  0.32
+Hits 10  91 - Recall rate 10:  0.26
+Hits 5:  73 - Recall rate 5:  0.21
+
+
+
+------------------------------------------mudando extracao das features e alterando treinamento para treinar melhor o classificador -- alteracoes diversas
+-------------------------------------------pre-process --fazendo stemming e stop words somente de conteudo que é possível fazer 
+
+Hits 10000:  181 - Recall rate 10000:  0.52
+Hits 1000:  181 - Recall rate 1000:  0.52
+Hits 500:  147 - Recall rate 500:  0.42
+Hits 100:  86 - Recall rate 100:  0.25
+Hits 50:  70 - Recall rate 50:  0.2
+Hits 20:  53 - Recall rate 20:  0.15
+Hits 10  38 - Recall rate 10:  0.11
+Hits 5:  29 - Recall rate 5:  0.08
+
+
+Results for BM25: 351 of  351
+Hits 10000:  351 - Recall rate 10000:  1
+Hits 1000:  220 - Recall rate 1000:  0.63
+Hits 500:  192 - Recall rate 500:  0.55
+Hits 100:  132 - Recall rate 100:  0.38
+Hits 50:  114 - Recall rate 50:  0.32
+Hits 20:  85 - Recall rate 20:  0.24
+Hits 10  73 - Recall rate 10:  0.21
+Hits 5:  55 - Recall rate 5:  0.16
+
+
+Results for Sum of Cosines: 351 of  351
+Hits 10000:  235 - Recall rate 10000:  0.67
+Hits 1000:  235 - Recall rate 1000:  0.67
+Hits 500:  218 - Recall rate 500:  0.62
+Hits 100:  173 - Recall rate 100:  0.49
+Hits 50:  143 - Recall rate 50:  0.41
+Hits 20:  111 - Recall rate 20:  0.32
+Hits 10  91 - Recall rate 10:  0.26
+Hits 5:  73 - Recall rate 5:  0.21
+
+-----------------------------------------------------ajustes diversos no tratamento das questoes
+
+Results for Classifier: 292 of  292
+Hits 10000:  142 - Recall rate 10000:  0.49
+Hits 1000:  142 - Recall rate 1000:  0.49
+Hits 500:  125 - Recall rate 500:  0.43
+Hits 100:  82 - Recall rate 100:  0.28
+Hits 50:  70 - Recall rate 50:  0.24
+Hits 20:  54 - Recall rate 20:  0.18
+Hits 10  45 - Recall rate 10:  0.15
+Hits 5:  34 - Recall rate 5:  0.12
+
+
+Results for BM25: 292 of  292
+Hits 10000:  292 - Recall rate 10000:  1
+Hits 1000:  184 - Recall rate 1000:  0.63
+Hits 500:  159 - Recall rate 500:  0.54
+Hits 100:  101 - Recall rate 100:  0.35
+Hits 50:  85 - Recall rate 50:  0.29
+Hits 20:  67 - Recall rate 20:  0.23
+Hits 10  57 - Recall rate 10:  0.2
+Hits 5:  43 - Recall rate 5:  0.15
+
+
+Results for Sum of Cosines: 292 of  292
+Hits 10000:  174 - Recall rate 10000:  0.6
+Hits 1000:  174 - Recall rate 1000:  0.6
+Hits 500:  162 - Recall rate 500:  0.55
+Hits 100:  114 - Recall rate 100:  0.39
+Hits 50:  103 - Recall rate 50:  0.35
+Hits 20:  83 - Recall rate 20:  0.28
+Hits 10  68 - Recall rate 10:  0.23
+Hits 5:  55 - Recall rate 5:  0.19
+
+
+------------------------------------------------apenas exibindo mais resultados
+Results for Classifier: 291 of  292
+Hits 10000:  130 - Recall rate 10000:  0.45
+Hits 1000:  130 - Recall rate 1000:  0.45
+Hits 500:  105 - Recall rate 500:  0.36
+Hits 100:  78 - Recall rate 100:  0.27
+Hits 50:  53 - Recall rate 50:  0.18
+Hits 20:  43 - Recall rate 20:  0.15
+Hits 10  34 - Recall rate 10:  0.12
+Hits 5:  23 - Recall rate 5:  0.08
+
+ 
+Results for BM25: 291 of  292
+Hits 10000:  291 - Recall rate 10000:  1
+Hits 1000:  233 - Recall rate 1000:  0.8
+Hits 500:  202 - Recall rate 500:  0.69
+Hits 100:  148 - Recall rate 100:  0.51
+Hits 50:  119 - Recall rate 50:  0.41
+Hits 20:  102 - Recall rate 20:  0.35
+Hits 10  80 - Recall rate 10:  0.27
+Hits 5:  63 - Recall rate 5:  0.22
+
+ 
+Results for Sum of Cosines: 291 of  292
+Hits 10000:  178 - Recall rate 10000:  0.61
+Hits 1000:  178 - Recall rate 1000:  0.61
+Hits 500:  169 - Recall rate 500:  0.58
+Hits 100:  129 - Recall rate 100:  0.44
+Hits 50:  113 - Recall rate 50:  0.39
+Hits 20:  91 - Recall rate 20:  0.31
+Hits 10  76 - Recall rate 10:  0.26
+Hits 5:  65 - Recall rate 5:  0.22
+
+
+--sem retirar o blockquote
+Results for Classifier: 291 of  292
+Hits 1000:  123 - Recall rate 1000:  0.42
+Hits 500:  99 - Recall rate 500:  0.34
+Hits 100:  67 - Recall rate 100:  0.23
+Hits 50:  59 - Recall rate 50:  0.2
+Hits 20:  43 - Recall rate 20:  0.15
+Hits 10  33 - Recall rate 10:  0.11
+Hits 5:  24 - Recall rate 5:  0.08
+
+ 
+Results for BM25: 291 of  292
+Hits 1000:  230 - Recall rate 1000:  0.79
+Hits 500:  213 - Recall rate 500:  0.73
+Hits 100:  160 - Recall rate 100:  0.55
+Hits 50:  128 - Recall rate 50:  0.44
+Hits 20:  110 - Recall rate 20:  0.38
+Hits 10  95 - Recall rate 10:  0.33
+Hits 5:  75 - Recall rate 5:  0.26
+
+
+--retirando o blockquote
+Results for Classifier: 290 of  292
+Hits 1000:  105 - Recall rate 1000:  0.36
+Hits 500:  84 - Recall rate 500:  0.29
+Hits 100:  56 - Recall rate 100:  0.19
+Hits 50:  51 - Recall rate 50:  0.18
+Hits 20:  33 - Recall rate 20:  0.11
+Hits 10  25 - Recall rate 10:  0.09
+Hits 5:  17 - Recall rate 5:  0.06
+
+Results for BM25: 290 of  292
+Hits 1000:  186 - Recall rate 1000:  0.64
+Hits 500:  162 - Recall rate 500:  0.56
+Hits 100:  105 - Recall rate 100:  0.36
+Hits 50:  88 - Recall rate 50:  0.3
+Hits 20:  71 - Recall rate 20:  0.24
+Hits 10  49 - Recall rate 10:  0.17
+Hits 5:  33 - Recall rate 5:  0.11
+
+
+
+--sem tratar o blockquote com classificador pegando aleatório
+Results for Classifier: 292 of  292
+Hits 1000:  134 - Recall rate 1000:  0.46
+Hits 500:  110 - Recall rate 500:  0.38
+Hits 100:  73 - Recall rate 100:  0.25
+Hits 50:  59 - Recall rate 50:  0.2
+Hits 20:  41 - Recall rate 20:  0.14
+Hits 10  30 - Recall rate 10:  0.1
+Hits 5:  19 - Recall rate 5:  0.07
+
+
+2017-07-17 01:38:02.327 
+Results for BM25: 292 of  292
+Hits 1000:  211 - Recall rate 1000:  0.72
+Hits 500:  180 - Recall rate 500:  0.62
+Hits 100:  139 - Recall rate 100:  0.48
+Hits 50:  122 - Recall rate 50:  0.42
+Hits 20:  97 - Recall rate 20:  0.33
+Hits 10  79 - Recall rate 10:  0.27
+Hits 5:  59 - Recall rate 5:  0.2
+
+-------------------------------
+
+Hits 10  30 - Recall rate 10:  0.1
+Hits 5:  20 - Recall rate 5:  0.07
+
+
+Hits 10  68 - Recall rate 10:  0.23
+Hits 5:  56 - Recall rate 5:  0.19
+
+-------------
+ruby
+
+Hits 10  22 - Recall rate 10:  0.08
+Hits 5:  15 - Recall rate 5:  0.05
+
+Hits 10  48 - Recall rate 10:  0.16
+Hits 5:  36 - Recall rate 5:  0.12
+
+
+
+
+
+** proximo teste 
+ - retirar term overlap
+
+
+
+1- tag ruby
+
+
+calculateSimilarityForCode: false
+limitPairsForTest= null
+maxTestSearchNumberForTest=10000
+maxConsideredSeachNumberForClassifier=1000
+recallRateCropNumber=1000
+
+
+--------------------------------------------------------------------------
+1- tag ruby
+calculateSimilarityTitleBodyBodyTitleTitleTag: false
+calculateSimilarityForCode: false
+limitPairsForTest= null
+maxTestSearchNumberForTest=1000
+maxConsideredSeachNumberForClassifier=1000
+recallRateCropNumber=1000
+
+Hits 1000:  14 - Recall rate 1000:  0.67
+Hits 500:  12 - Recall rate 500:  0.57
+Hits 100:  5 - Recall rate 100:  0.24
+Hits 50:  5 - Recall rate 50:  0.24
+Hits 20:  1 - Recall rate 20:  0.05
+Hits 10  1 - Recall rate 10:  0.05
+Hits 5:  1 - Recall rate 5:  0.05
+
+
+----Até aqui resultados artificiais ( usando o oráculo para para a geracao das features pelo classificador ) -------
+
+2) fim
+
+String finalContent = "";
+
+String title = retiraSimbolosEspeciais(question.getTitle());
+String body = retiraHtmlTags(question.getBody());
+             body = tokenizeStopStem(body);
+             body = retiraSimbolosEspeciais(body);
+String tags = separaTags(question.getTags());
+
+finalContent = title +" " + finalContent  + " "+tags;
+
+
+questao 55
+Hits: (1000) -> 21 
+Hits: (500) -> 21 
+Hits: (100) -> 15 
+Hits: (50) -> 13 
+Hits: (20) -> 10 
+Hits: (10) -> 6
+Hits: (5) -> 5
+
+
+
+---------------------------------------------------------------------------
+1) fim 04/07
+
+Hits: (1000) -> 13 
+Hits: (500) -> 12 
+Hits: (100) -> 7 
+Hits: (50) -> 6 
+Hits: (20) -> 5 
+Hits: (10) -> 5 
+Hits: (5) -> 2
+
+
