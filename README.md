@@ -23,7 +23,8 @@ host    all             all             127.0.0.1/32            md5
 4. [Maven 3](https://maven.apache.org/)
 
 ### Installing the app.
-1. Download the SO [Dump of March 2017]. We provide two dumps where both contains the main tables we use. They differs only in **posts** table. In one of them the table contains the original content, while the other is stemmed and had the stop words removed. The next steps are described considered the fastest way to reproduce DupPredictor, in other words, the stemmed/stopped dump. If you desire to simulate the entire process, including the stemming and stop words removal, follow the instructions available in [preprocess] for stemming and removing the stop words, then procceed in next steps.
+1. Download the SO Dump of March 2017. We provide two dumps where both contains the main tables we use. They differs only in **posts** table. In [Dump 1](http://lascam.facom.ufu.br/companion/duplicatequestion/backup_so_2017_raw_basic_tables_ok.backup), the table is stemmed and had the stop words removed. Also it has the synonyms of tags and code blocks already extracted. In [Dump 2](...), the table contains the original content. The next steps are described considered the fastest way to reproduce DupPredictor, in other words, for Dump 1. If you desire to simulate the entire process, including the stemming and stop words removal, follow the instructions available in [preprocess], then proceed in next steps.
+
 2. On your DB tool, create a new database named stackoverflow2017. This is a query example:
 ```
 CREATE DATABASE stackoverflow2017
