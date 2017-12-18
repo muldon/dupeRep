@@ -8,7 +8,18 @@ Note: all the experiments were conducted over a server equipped with 80 GB RAM, 
 Softwares:
 1. [Java 1.8] 
 2. [Postgres 9.3]
-3. [PgAdmin] (we used PgAdmin 3) but feel free to use any DB tool for PostgreSQL. 
+3. [PgAdmin] (we used PgAdmin 3) but feel free to use any DB tool for PostgreSQL. Configure your DB to accept local connections. An example of *pg_hba.conf* configuration:
+
+```
+...
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+# "local" is for Unix domain socket connections only
+local   all             all                                     md5
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+...
+```
+
 4. [Maven 3](https://maven.apache.org/)
 
 ### Installing the app.
@@ -33,7 +44,7 @@ Obs: restoring this dump would require at least 100 Gb of free space. If your Op
 
 ## Running the tests
 
-1. Edit the file *application.properties* under *src/main/resources* and set the parameters bellow "##### INPUT PARAMETERS #####". The file comes with default values for simulating Dupe original work. You need to fill only one variable: `spring.datasource.password=YOUR_DB_PASSWORD`. 
+1. Edit the file *application.properties* under *src/main/resources* and set the parameters bellow "##### INPUT PARAMETERS #####". The file comes with default values for simulating Dupe original work. You need to fill variable: `spring.datasource.password=YOUR_DB_PASSWORD`. Change `spring.datasource.username` if your db user is not postgres. 
 
 2. In a terminal, go to the Project_folder and build the jar file with the Maven command: `mvn package -Dmaven.test.skip=true`. Assert that dupe.jar is built under target folder. 
 
