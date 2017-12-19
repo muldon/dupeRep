@@ -43,7 +43,7 @@ Obs: restoring this dump would require at least 100 Gb of free space. If your Op
 
 5. Assert Maven is correctly installed. In a Terminal enter with the command: `mvn --version`. This should return the version of Maven. 
 
-## Running the tests
+## Running the Experiment
 
 1. Edit the file *application.properties* under *src/main/resources* and set the parameters bellow "##### INPUT PARAMETERS #####". The file comes with default values for simulating Dupe original work. You need to fill variable: `spring.datasource.password=YOUR_DB_PASSWORD`. Change `spring.datasource.username` if your db user is not postgres. 
 
@@ -51,11 +51,18 @@ Obs: restoring this dump would require at least 100 Gb of free space. If your Op
 
 3. Go to Project_folder/target and run the command to execute DupeRep: `java -Xms1024M -Xmx40g -jar ./dupe.jar`. The Xmx value may be bigger if you change the "maxCreationDate" parameter to a more recent date. 
 
+## Results
 
-### Results
-
-The results are displayed in the terminal but also stored in the database in tables **experiment** and **recallrate** . The following query should return the results:  
-`select * from experiment e, recallrate r where e.id = r.experiment_id order by e.lote,e.id desc, origem `
+The results are displayed in the terminal but also stored in the database in tables **experiment** and **recallrate** . The following query should return the results:  
+```
+select e.id,e.tag, e.numberoftestedquestions, e.observacao as observation,r.recallrate_100,r.recallrate_50, r.recallrate_20,r.recallrate_10,r.recallrate_5
+from experiment e, recallrate r
+where e.id = r.experiment_id
+and app = 'Dupe'
+--and e.lote=100
+order by e.id desc`
+```
+this query shows the number of tested questions, the considered tag, the observation filled in *application.properties* file and several values for recall rates. You can uncomment `and e.lote=100` to filter your experiment by its id (100 in this case). You can also select any column from tables **experiment** and **recallrate**. 
 
 
 ## Authors
