@@ -53,16 +53,20 @@ Obs: restoring this dump would require at least 100 Gb of free space. If your Op
 
 ## Results
 
-The results are displayed in the terminal but also stored in the database in tables **experiment** and **recallrate** . The following query should return the results:  
+The results are displayed in the terminal but also stored in the database in tables **experiment** and **recallrate**. Each experiment shows recall rates for five classifiers: BM25, DupPredictor, Stanford, Sum of Cosines and Weka. Weka is the default value por DupeRep. 
+
+The following query should return the results:  
 ```
-select e.id,e.tag, e.numberoftestedquestions, e.observacao as observation,r.recallrate_100,r.recallrate_50, r.recallrate_20,r.recallrate_10,r.recallrate_5
+select e.id, e.tag,e.lote,e.observacao as observation, r.origem as origin, r.recallrate_100,r.recallrate_50, r.recallrate_20,r.recallrate_10,r.recallrate_5
 from experiment e, recallrate r
 where e.id = r.experiment_id
+--and e.lote = 10 
+--and origem like '%Weka%'
+--and tag='java'
 and app = 'Dupe'
---and e.lote=100
-order by e.id desc`
+order by e.lote, origem 
 ```
-this query shows the number of tested questions, the considered tag, the observation filled in *application.properties* file and several values for recall rates. You can uncomment `and e.lote=100` to filter your experiment by its id (100 in this case). You can also select any column from tables **experiment** and **recallrate**. 
+this query shows the considered tag, the observation filled in *application.properties* file, the origin denoting the used classifier and several values for recall rates. You can uncomment `and e.lote=10` to filter your experiment by its id (10 in this case), or `and origem like '%Weka%'` to filter results by the classifier, or `and tag='java'` to filter results by tag. You can also select any column from tables **experiment** and **recallrate**. 
 
 
 ## Authors
