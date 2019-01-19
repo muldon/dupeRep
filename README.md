@@ -1,5 +1,5 @@
 # DupeRep
-A replication package of Dupe original [work](http://ieeexplore.ieee.org/abstract/document/7832919/). 
+A replication package of Dupe original [work](http://ieeexplore.ieee.org/abstract/document/7832919/). If you are using this source code, please cite our [paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8330262).
 
 ### Prerequisites
 
